@@ -35,7 +35,7 @@ namespace Microsoft.Data.Entity.Tests.TestUtilities
                 }
             }
 
-            LogMessages.Add(new Tuple<LogLevel, string>(logLevel, message.ToString()));
+            LogMessages?.Add(new Tuple<LogLevel, string>(logLevel, message.ToString()));
         }
 
         public bool IsEnabled(LogLevel logLevel) => true;

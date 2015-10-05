@@ -2,22 +2,30 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using JetBrains.Annotations;
+using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Utilities;
 
 namespace Microsoft.Data.Entity.Storage
 {
     public class RelationalCommandBuilderFactory : IRelationalCommandBuilderFactory
     {
+        private readonly ISensitiveDataLogger<RelationalCommand> _logger;
         private readonly IRelationalTypeMapper _typeMapper;
 
-        public RelationalCommandBuilderFactory([NotNull] IRelationalTypeMapper typeMapper)
+        public RelationalCommandBuilderFactory(
+            [NotNull] ISensitiveDataLogger<RelationalCommand> logger,
+            [NotNull] IRelationalTypeMapper typeMapper)
         {
+            Check.NotNull(logger, nameof(logger));
             Check.NotNull(typeMapper, nameof(typeMapper));
 
+            _logger = logger;
             _typeMapper = typeMapper;
         }
 
         public virtual RelationalCommandBuilder Create()
-            => new RelationalCommandBuilder(_typeMapper);
+            => new RelationalCommandBuilder(
+                _logger,
+                _typeMapper);
     }
 }

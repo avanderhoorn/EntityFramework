@@ -8,6 +8,7 @@ using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Storage;
 using Microsoft.Data.Entity.Tests;
+using Moq;
 using Xunit;
 
 namespace Microsoft.Data.Entity
@@ -91,6 +92,7 @@ Statement3
         private RelationalCommandListBuilder CreateBuilder()
             => new RelationalCommandListBuilder(
                 new RelationalCommandBuilderFactory(
+                    new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
                     new TestRelationalTypeMapper()));
 
         private class TestRelationalTypeMapper : RelationalTypeMapper

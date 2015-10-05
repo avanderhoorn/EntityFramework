@@ -3,14 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Storage;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Data.Entity.Query.Internal
 {
@@ -18,18 +15,15 @@ namespace Microsoft.Data.Entity.Query.Internal
     {
         private readonly RelationalQueryContext _relationalQueryContext;
         private readonly CommandBuilder _commandBuilder;
-        private readonly ISensitiveDataLogger _logger;
         private readonly int? _queryIndex;
 
         public AsyncQueryingEnumerable(
             [NotNull] RelationalQueryContext relationalQueryContext,
             [NotNull] CommandBuilder commandBuilder,
-            [NotNull] ISensitiveDataLogger logger,
             int? queryIndex)
         {
             _relationalQueryContext = relationalQueryContext;
             _commandBuilder = commandBuilder;
-            _logger = logger;
             _queryIndex = queryIndex;
         }
 
@@ -39,7 +33,7 @@ namespace Microsoft.Data.Entity.Query.Internal
         {
             private readonly AsyncQueryingEnumerable _queryingEnumerable;
 
-            private DbDataReader _dataReader;
+            private RelationalDataReader _dataReader;
             private Queue<ValueBuffer> _buffer;
 
             private bool _disposed;
@@ -51,7 +45,7 @@ namespace Microsoft.Data.Entity.Query.Internal
 
             public async Task<bool> MoveNext(CancellationToken cancellationToken)
             {
-                Debug.Assert(!_disposed);
+                Debug.Assert(!_disposed); // Hot path
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -62,29 +56,26 @@ namespace Microsoft.Data.Entity.Query.Internal
                         await _queryingEnumerable._relationalQueryContext.Connection
                             .OpenAsync(cancellationToken);
 
-                        using (var command
+                        await _queryingEnumerable._relationalQueryContext
+                            .RegisterValueBufferCursorAsync(this, _queryingEnumerable._queryIndex, cancellationToken);
+
+                        var command
                             = _queryingEnumerable._commandBuilder
-                                .Build(
-                                    _queryingEnumerable._relationalQueryContext.Connection,
-                                    _queryingEnumerable._relationalQueryContext.ParameterValues))
-                        {
-                            _queryingEnumerable._logger.LogCommand(command);
+                                .Build(_queryingEnumerable._relationalQueryContext.ParameterValues);
 
-                            await _queryingEnumerable._relationalQueryContext
-                                .RegisterValueBufferCursorAsync(this, _queryingEnumerable._queryIndex, cancellationToken);
+                        _dataReader = await command.ExecuteReaderAsync(
+                            _queryingEnumerable._relationalQueryContext.Connection,
+                            cancellationToken);
 
-                            _dataReader = await command.ExecuteReaderAsync(cancellationToken);
-
-                            _queryingEnumerable._commandBuilder.NotifyReaderCreated(_dataReader);
-                        }
+                        _queryingEnumerable._commandBuilder.NotifyReaderCreated(_dataReader.DbDataReader);
                     }
 
-                    var hasNext = await _dataReader.ReadAsync(cancellationToken);
+                    var hasNext = await _dataReader.DbDataReader.ReadAsync(cancellationToken);
 
                     Current
                         = hasNext
                             ? _queryingEnumerable._commandBuilder.ValueBufferFactory
-                                .Create(_dataReader)
+                                .Create(_dataReader.DbDataReader)
                             : default(ValueBuffer);
 
                     return hasNext;
@@ -110,11 +101,11 @@ namespace Microsoft.Data.Entity.Query.Internal
 
                     using (_dataReader)
                     {
-                        while (await _dataReader.ReadAsync(cancellationToken))
+                        while (await _dataReader.DbDataReader.ReadAsync(cancellationToken))
                         {
                             _buffer.Enqueue(
                                 _queryingEnumerable._commandBuilder.ValueBufferFactory
-                                    .Create(_dataReader));
+                                    .Create(_dataReader.DbDataReader));
                         }
                     }
 

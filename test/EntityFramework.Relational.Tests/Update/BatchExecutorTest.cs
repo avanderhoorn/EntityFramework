@@ -3,11 +3,9 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Storage;
 using Microsoft.Data.Entity.Update;
 using Microsoft.Data.Entity.Update.Internal;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -30,17 +28,15 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var cancellationToken = new CancellationTokenSource().Token;
 
-            var batchExecutor = new BatchExecutorForTest();
+            var batchExecutor = new BatchExecutor();
 
             await batchExecutor.ExecuteAsync(new[] { mockModificationCommandBatch.Object }, mockRelationalConnection.Object, cancellationToken);
 
             mockRelationalConnection.Verify(rc => rc.OpenAsync(cancellationToken));
             mockRelationalConnection.Verify(rc => rc.Close());
             transactionMock.Verify(t => t.Commit());
-
             mockModificationCommandBatch.Verify(mcb => mcb.ExecuteAsync(
                 It.IsAny<IRelationalConnection>(),
-                It.IsAny<ISensitiveDataLogger>(),
                 cancellationToken));
         }
 
@@ -56,7 +52,7 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var cancellationToken = new CancellationTokenSource().Token;
 
-            var batchExecutor = new BatchExecutorForTest();
+            var batchExecutor = new BatchExecutor();
 
             await batchExecutor.ExecuteAsync(new[] { mockModificationCommandBatch.Object }, mockRelationalConnection.Object, cancellationToken);
 
@@ -66,16 +62,7 @@ namespace Microsoft.Data.Entity.Tests.Update
             transactionMock.Verify(t => t.Commit(), Times.Never);
             mockModificationCommandBatch.Verify(mcb => mcb.ExecuteAsync(
                 It.IsAny<IRelationalConnection>(),
-                It.IsAny<ISensitiveDataLogger>(),
                 cancellationToken));
-        }
-
-        private class BatchExecutorForTest : BatchExecutor
-        {
-            public BatchExecutorForTest()
-                : base(new Mock<ISensitiveDataLogger<BatchExecutor>>().Object)
-            {
-            }
         }
     }
 }

@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Data;
+using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Storage.Internal;
 using Microsoft.Data.Entity.TestUtilities.FakeProvider;
+using Moq;
 using Xunit;
 
 namespace Microsoft.Data.Entity.Storage
@@ -15,6 +17,7 @@ namespace Microsoft.Data.Entity.Storage
         {
             var builder = new SqlCommandBuilder(
                 new RelationalCommandBuilderFactory(
+                    new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
                     new FakeRelationalTypeMapper()),
                 new RelationalSqlGenerator(),
                 new ParameterNameGeneratorFactory());
@@ -30,6 +33,7 @@ namespace Microsoft.Data.Entity.Storage
         {
             var builder = new SqlCommandBuilder(
                 new RelationalCommandBuilderFactory(
+                    new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
                     new FakeRelationalTypeMapper()),
                 new RelationalSqlGenerator(),
                 new ParameterNameGeneratorFactory());
@@ -45,6 +49,7 @@ namespace Microsoft.Data.Entity.Storage
         {
             var builder = new SqlCommandBuilder(
                 new RelationalCommandBuilderFactory(
+                    new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
                     new FakeRelationalTypeMapper()),
                 new RelationalSqlGenerator(),
                 new ParameterNameGeneratorFactory());

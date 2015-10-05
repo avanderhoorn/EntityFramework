@@ -107,6 +107,7 @@ namespace Microsoft.Data.Entity.Migrations
             var typeMapper = new SqlServerTypeMapper();
 
             var commandBuilderFactory = new RelationalCommandBuilderFactory(
+                new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
                 typeMapper);
 
             return new SqlServerHistoryRepository(

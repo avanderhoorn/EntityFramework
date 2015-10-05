@@ -114,7 +114,9 @@ namespace Microsoft.Data.Entity.Migrations
                     annotationsProvider,
                     new SqliteMigrationsAnnotationProvider()),
                 new SqliteMigrationsSqlGenerator(
-                    new RelationalCommandBuilderFactory(typeMapper),
+                    new RelationalCommandBuilderFactory(
+                        new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
+                        typeMapper),
                     new SqliteSqlGenerator(),
                     typeMapper,
                     annotationsProvider),

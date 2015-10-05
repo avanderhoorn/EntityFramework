@@ -8,6 +8,7 @@ using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Migrations.Operations;
 using Microsoft.Data.Entity.Storage;
 using Microsoft.Data.Entity.Tests;
+using Moq;
 using Xunit;
 
 namespace Microsoft.Data.Entity.Migrations
@@ -21,7 +22,9 @@ namespace Microsoft.Data.Entity.Migrations
                 var typeMapper = new ConcreteRelationalTypeMapper();
 
                 return new ConcreteMigrationSqlGenerator(
-                    new RelationalCommandBuilderFactory(typeMapper),
+                    new RelationalCommandBuilderFactory(
+                        new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
+                        typeMapper),
                     new RelationalSqlGenerator(),
                     typeMapper,
                     new TestAnnotationProvider());

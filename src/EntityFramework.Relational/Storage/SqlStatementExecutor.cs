@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Threading;
@@ -43,10 +42,7 @@ namespace Microsoft.Data.Entity.Storage
             {
                 foreach (var command in relationalCommands)
                 {
-                    Execute<object>(
-                        connection,
-                        command,
-                        c => c.ExecuteNonQuery());
+                    command.ExecuteNonQuery(connection);
                 }
             }
             finally
@@ -69,10 +65,8 @@ namespace Microsoft.Data.Entity.Storage
             {
                 foreach (var command in relationalCommands)
                 {
-                    await ExecuteAsync(
+                    await command.ExecuteNonQueryAsync(
                         connection,
-                        command,
-                        async c => await c.ExecuteNonQueryAsync(cancellationToken),
                         cancellationToken);
                 }
             }
@@ -80,6 +74,7 @@ namespace Microsoft.Data.Entity.Storage
             {
                 connection.Close();
             }
+
         }
 
         public virtual object ExecuteScalar(
@@ -89,13 +84,19 @@ namespace Microsoft.Data.Entity.Storage
             Check.NotNull(connection, nameof(connection));
             Check.NotEmpty(sql, nameof(sql));
 
-            return Execute(
-                connection,
-                CreateCommand(sql),
-                c => c.ExecuteScalar());
+            connection.Open();
+
+            try
+            {
+                return CreateCommand(sql).ExecuteScalar(connection);
+            }
+            finally
+            {
+                connection.Close();
+            }
         }
 
-        public virtual Task<object> ExecuteScalarAsync(
+        public virtual async Task<object> ExecuteScalarAsync(
             IRelationalConnection connection,
             string sql,
             CancellationToken cancellationToken = default(CancellationToken))
@@ -103,11 +104,16 @@ namespace Microsoft.Data.Entity.Storage
             Check.NotNull(connection, nameof(connection));
             Check.NotEmpty(sql, nameof(sql));
 
-            return ExecuteAsync(
-                connection,
-                CreateCommand(sql),
-                c => c.ExecuteScalarAsync(cancellationToken),
-                cancellationToken);
+            await connection.OpenAsync(cancellationToken);
+
+            try
+            {
+                return await CreateCommand(sql).ExecuteScalarAsync(connection, cancellationToken);
+            }
+            finally
+            {
+                connection.Close();
+            }
         }
 
         public virtual DbDataReader ExecuteReader(
@@ -117,43 +123,11 @@ namespace Microsoft.Data.Entity.Storage
             Check.NotNull(connection, nameof(connection));
             Check.NotEmpty(sql, nameof(sql));
 
-            return Execute(
-                connection,
-                CreateCommand(sql),
-                c => c.ExecuteReader());
-        }
-
-        public virtual Task<DbDataReader> ExecuteReaderAsync(
-            IRelationalConnection connection,
-            string sql,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            Check.NotNull(connection, nameof(connection));
-            Check.NotEmpty(sql, nameof(sql));
-
-            return ExecuteAsync(
-                connection,
-                CreateCommand(sql),
-                c => c.ExecuteReaderAsync(cancellationToken),
-                cancellationToken);
-        }
-
-        protected virtual T Execute<T>(
-            [NotNull] IRelationalConnection connection,
-            [NotNull] RelationalCommand command,
-            [NotNull] Func<DbCommand, T> action)
-        {
-            // TODO Deal with suppressing transactions etc.
             connection.Open();
 
             try
             {
-                using (var dbCommand = command.CreateCommand(connection))
-                {
-                    Logger.LogCommand(dbCommand);
-
-                    return action(dbCommand);
-                }
+                return CreateCommand(sql).ExecuteReader(connection).DbDataReader;
             }
             finally
             {
@@ -161,22 +135,19 @@ namespace Microsoft.Data.Entity.Storage
             }
         }
 
-        protected virtual async Task<T> ExecuteAsync<T>(
-            [NotNull] IRelationalConnection connection,
-            [NotNull] RelationalCommand command,
-            [NotNull] Func<DbCommand, Task<T>> action,
+        public virtual async Task<DbDataReader> ExecuteReaderAsync(
+            IRelationalConnection connection,
+            string sql,
             CancellationToken cancellationToken = default(CancellationToken))
         {
+            Check.NotNull(connection, nameof(connection));
+            Check.NotEmpty(sql, nameof(sql));
+
             await connection.OpenAsync(cancellationToken);
 
             try
             {
-                using (var dbCommand = command.CreateCommand(connection))
-                {
-                    Logger.LogCommand(dbCommand);
-
-                    return await action(dbCommand);
-                }
+                return (await CreateCommand(sql).ExecuteReaderAsync(connection, cancellationToken)).DbDataReader;
             }
             finally
             {

@@ -163,7 +163,9 @@ namespace Microsoft.Data.Entity.SqlServer.Tests
 
             public FakeSqlStatementExecutor(int blockSize)
                 : base(
-                    new RelationalCommandBuilderFactory(new SqlServerTypeMapper()),
+                    new RelationalCommandBuilderFactory(
+                        new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
+                        new SqlServerTypeMapper()),
                     new Mock<ISensitiveDataLogger<SqlStatementExecutor>>().Object)
             {
                 _blockSize = blockSize;

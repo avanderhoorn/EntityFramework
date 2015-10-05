@@ -4,11 +4,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Storage;
 
 namespace Microsoft.Data.Entity.Query.Internal
@@ -17,18 +16,15 @@ namespace Microsoft.Data.Entity.Query.Internal
     {
         private readonly RelationalQueryContext _relationalQueryContext;
         private readonly CommandBuilder _commandBuilder;
-        private readonly ISensitiveDataLogger _logger;
         private readonly int? _queryIndex;
 
         public QueryingEnumerable(
             [NotNull] RelationalQueryContext relationalQueryContext,
             [NotNull] CommandBuilder commandBuilder,
-            [NotNull] ISensitiveDataLogger logger,
             int? queryIndex)
         {
             _relationalQueryContext = relationalQueryContext;
             _commandBuilder = commandBuilder;
-            _logger = logger;
             _queryIndex = queryIndex;
         }
 
@@ -40,7 +36,7 @@ namespace Microsoft.Data.Entity.Query.Internal
         {
             private readonly QueryingEnumerable _queryingEnumerable;
 
-            private DbDataReader _dataReader;
+            private RelationalDataReader _dataReader;
             private Queue<ValueBuffer> _buffer;
 
             private bool _disposed;
@@ -52,34 +48,32 @@ namespace Microsoft.Data.Entity.Query.Internal
 
             public bool MoveNext()
             {
+                Debug.Assert(!_disposed); // Hot path
+
                 if (_buffer == null)
                 {
                     if (_dataReader == null)
                     {
                         _queryingEnumerable._relationalQueryContext.Connection.Open();
 
-                        using (var command
+                        _queryingEnumerable._relationalQueryContext
+                            .RegisterValueBufferCursor(this, _queryingEnumerable._queryIndex);
+
+                        var command
                             = _queryingEnumerable._commandBuilder
-                                .Build(
-                                    _queryingEnumerable._relationalQueryContext.Connection,
-                                    _queryingEnumerable._relationalQueryContext.ParameterValues))
-                        {
-                            _queryingEnumerable._logger.LogCommand(command);
+                                .Build(_queryingEnumerable._relationalQueryContext.ParameterValues);
 
-                            _queryingEnumerable._relationalQueryContext.RegisterValueBufferCursor(this, _queryingEnumerable._queryIndex);
+                        _dataReader = command.ExecuteReader(_queryingEnumerable._relationalQueryContext.Connection);
 
-                            _dataReader = command.ExecuteReader();
-
-                            _queryingEnumerable._commandBuilder.NotifyReaderCreated(_dataReader);
-                        }
+                        _queryingEnumerable._commandBuilder.NotifyReaderCreated(_dataReader.DbDataReader);
                     }
 
-                    var hasNext = _dataReader.Read();
+                    var hasNext = _dataReader.DbDataReader.Read();
 
                     Current
                         = hasNext
                             ? _queryingEnumerable._commandBuilder.ValueBufferFactory
-                                .Create(_dataReader)
+                                .Create(_dataReader.DbDataReader)
                             : default(ValueBuffer);
 
                     return hasNext;
@@ -103,13 +97,13 @@ namespace Microsoft.Data.Entity.Query.Internal
                 {
                     _buffer = new Queue<ValueBuffer>();
 
-                    using (_dataReader)
+                    using(_dataReader)
                     {
-                        while (_dataReader.Read())
+                        while (_dataReader.DbDataReader.Read())
                         {
                             _buffer.Enqueue(
                                 _queryingEnumerable._commandBuilder.ValueBufferFactory
-                                    .Create(_dataReader));
+                                    .Create(_dataReader.DbDataReader));
                         }
                     }
 

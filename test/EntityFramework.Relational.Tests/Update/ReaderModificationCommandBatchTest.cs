@@ -14,7 +14,6 @@ using Microsoft.Data.Entity.Internal;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Storage;
 using Microsoft.Data.Entity.Update;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
 using Xunit;
@@ -194,7 +193,7 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var connection = Mock.Of<IRelationalConnection>();
 
-            await batch.ExecuteAsync(connection, new Mock<ISensitiveDataLogger>().Object);
+            await batch.ExecuteAsync(connection);
 
             mockReader.Verify(r => r.ReadAsync(It.IsAny<CancellationToken>()), Times.Once);
             mockReader.Verify(r => r.GetInt32(0), Times.Once);
@@ -214,7 +213,7 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var connection = Mock.Of<IRelationalConnection>();
 
-            await batch.ExecuteAsync(connection, new Mock<ISensitiveDataLogger>().Object);
+            await batch.ExecuteAsync(connection);
 
             Assert.Equal(42, entry[entry.EntityType.GetProperty("Id")]);
             Assert.Equal("Test", entry[entry.EntityType.GetProperty("Name")]);
@@ -235,7 +234,7 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var connection = Mock.Of<IRelationalConnection>();
 
-            await batch.ExecuteAsync(connection, new Mock<ISensitiveDataLogger>().Object);
+            await batch.ExecuteAsync(connection);
 
             Assert.Equal(42, entry[entry.EntityType.GetProperty("Id")]);
             Assert.Equal("FortyTwo", entry[entry.EntityType.GetProperty("Name")]);
@@ -255,7 +254,7 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var connection = Mock.Of<IRelationalConnection>();
 
-            await batch.ExecuteAsync(connection, new Mock<ISensitiveDataLogger>().Object);
+            await batch.ExecuteAsync(connection);
 
             Assert.Equal(1, entry[entry.EntityType.GetProperty("Id")]);
             Assert.Equal("FortyTwo", entry[entry.EntityType.GetProperty("Name")]);
@@ -280,7 +279,7 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             var connection = Mock.Of<IRelationalConnection>();
 
-            await batch.ExecuteAsync(connection, new Mock<ISensitiveDataLogger>().Object);
+            await batch.ExecuteAsync(connection);
 
             Assert.Equal(42, entry[entry.EntityType.GetProperty("Id")]);
         }
@@ -301,8 +300,7 @@ namespace Microsoft.Data.Entity.Tests.Update
             Assert.Equal(RelationalStrings.UpdateConcurrencyException(1, 42),
                 (await Assert.ThrowsAsync<DbUpdateConcurrencyException>(
                     async () => await batch.ExecuteAsync(
-                        connection,
-                        new Mock<ISensitiveDataLogger>().Object))).Message);
+                        connection))).Message);
         }
 
         [Fact]
@@ -322,8 +320,7 @@ namespace Microsoft.Data.Entity.Tests.Update
             Assert.Equal(RelationalStrings.UpdateConcurrencyException(1, 0),
                 (await Assert.ThrowsAsync<DbUpdateConcurrencyException>(
                     async () => await batch.ExecuteAsync(
-                        connection,
-                        new Mock<ISensitiveDataLogger>().Object))).Message);
+                        connection))).Message);
         }
 
         [Fact]
@@ -625,7 +622,9 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             public ModificationCommandBatchFake(IUpdateSqlGenerator sqlGenerator = null)
                 : base(
-                      new RelationalCommandBuilderFactory(new ConcreteTypeMapper()),
+                      new RelationalCommandBuilderFactory(
+                          new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
+                          new ConcreteTypeMapper()),
                       new RelationalSqlGenerator(),
                       sqlGenerator ?? new FakeSqlGenerator(),
                       new TypedRelationalValueBufferFactoryFactory())
@@ -636,7 +635,9 @@ namespace Microsoft.Data.Entity.Tests.Update
 
             public ModificationCommandBatchFake(DbDataReader reader, IUpdateSqlGenerator sqlGenerator = null)
                 : base(
-                      new RelationalCommandBuilderFactory(new ConcreteTypeMapper()),
+                      new RelationalCommandBuilderFactory(
+                          new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
+                          new ConcreteTypeMapper()),
                       new RelationalSqlGenerator(),
                       sqlGenerator ?? new FakeSqlGenerator(),
                       new TypedRelationalValueBufferFactoryFactory())
@@ -704,7 +705,7 @@ namespace Microsoft.Data.Entity.Tests.Update
             public int AddParameterCalls { get; private set; }
 
             public CommandBuilderFake()
-                : base(new ConcreteTypeMapper())
+                : base(new Mock<ISensitiveDataLogger<RelationalCommand>>().Object, new ConcreteTypeMapper())
             {
             }
 

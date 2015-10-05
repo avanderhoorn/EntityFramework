@@ -1,10 +1,12 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Storage;
 using Microsoft.Data.Entity.Storage.Internal;
 using Microsoft.Data.Entity.Update;
 using Microsoft.Data.Entity.Update.Internal;
+using Moq;
 using Xunit;
 
 namespace Microsoft.Data.Entity.SqlServer.Tests.Update
@@ -15,7 +17,9 @@ namespace Microsoft.Data.Entity.SqlServer.Tests.Update
         public void AddCommand_returns_false_when_max_batch_size_is_reached()
         {
             var batch = new SqlServerModificationCommandBatch(
-                new RelationalCommandBuilderFactory(new SqlServerTypeMapper()),
+                new RelationalCommandBuilderFactory(
+                    new Mock<ISensitiveDataLogger<RelationalCommand>>().Object,
+                    new SqlServerTypeMapper()),
                 new SqlServerSqlGenerator(),
                 new SqlServerUpdateSqlGenerator(new SqlServerSqlGenerator()),
                 new UntypedRelationalValueBufferFactoryFactory(),

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Internal;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Utilities;
@@ -12,14 +13,19 @@ namespace Microsoft.Data.Entity.Storage
 {
     public class RelationalCommandBuilder
     {
+        private readonly ISensitiveDataLogger<RelationalCommand> _logger;
         private readonly IRelationalTypeMapper _typeMapper;
         private readonly IndentedStringBuilder _stringBuilder = new IndentedStringBuilder();
         private readonly List<RelationalParameter> _parameters = new List<RelationalParameter>();
 
-        public RelationalCommandBuilder([NotNull] IRelationalTypeMapper typeMapper)
+        public RelationalCommandBuilder(
+            [NotNull] ISensitiveDataLogger<RelationalCommand> logger,
+            [NotNull] IRelationalTypeMapper typeMapper)
         {
+            Check.NotNull(logger, nameof(logger));
             Check.NotNull(typeMapper, nameof(typeMapper));
 
+            _logger = logger;
             _typeMapper = typeMapper;
         }
 
@@ -119,6 +125,7 @@ namespace Microsoft.Data.Entity.Storage
 
         public virtual RelationalCommand BuildRelationalCommand()
                 => new RelationalCommand(
+                    _logger,
                     _stringBuilder.ToString(),
                     _parameters);
 
