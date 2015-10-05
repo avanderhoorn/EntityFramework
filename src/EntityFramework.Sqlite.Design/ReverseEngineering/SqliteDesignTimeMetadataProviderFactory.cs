@@ -8,6 +8,7 @@ using Microsoft.Data.Entity.Relational.Design.ReverseEngineering;
 using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
 using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal.Templating;
 using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal.Templating.Compilation;
+using Microsoft.Data.Entity.Scaffolding;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
@@ -26,7 +27,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                 .AddSingleton<IRelationalAnnotationProvider, SqliteAnnotationProvider>()
                 .AddSingleton<ConfigurationFactory, SqliteConfigurationFactory>()
                 .AddSingleton<CodeWriter, RazorTemplateCodeWriter>()
-                .AddTransient<SqliteMetadataReader>();
+                .AddTransient<IMetadataReader, SqliteMetadataReader>();
         }
     }
 }

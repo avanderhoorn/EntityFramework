@@ -11,27 +11,31 @@ using Microsoft.Data.Entity.Metadata.Conventions;
 using Microsoft.Data.Entity.Metadata.Internal;
 using Microsoft.Data.Entity.Relational.Design.ReverseEngineering;
 using Microsoft.Data.Entity.Relational.Design.Utilities;
-using Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering.Model;
+using Microsoft.Data.Entity.Scaffolding;
+using Microsoft.Data.Entity.Scaffolding.Model;
 using Microsoft.Data.Entity.Utilities;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 {
     public class SqliteMetadataModelProvider : RelationalMetadataModelProvider
     {
-        private readonly SqliteMetadataReader _metadataReader;
+        private readonly IMetadataReader _metadataReader;
+        private readonly SqliteReverseTypeMapper _typeMapper;
 
         public SqliteMetadataModelProvider(
+            [NotNull] SqliteReverseTypeMapper typeMapper,
             [NotNull] ILoggerFactory loggerFactory,
             [NotNull] ModelUtilities modelUtilities,
             [NotNull] CSharpUtilities cSharpUtilities,
-            [NotNull] SqliteMetadataReader metadataReader
+            [NotNull] IMetadataReader metadataReader
             )
             : base(loggerFactory, modelUtilities, cSharpUtilities)
         {
+            Check.NotNull(typeMapper, nameof(typeMapper));
             Check.NotNull(metadataReader, nameof(metadataReader));
 
+            _typeMapper = typeMapper;
             _metadataReader = metadataReader;
         }
 
@@ -43,14 +47,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 
             var modelBuilder = new ModelBuilder(new ConventionSet());
 
-            DatabaseInfo databaseInfo;
-
-            using (var connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
-
-                databaseInfo = _metadataReader.ReadDatabaseInfo(connection, _tableSelectionSet);
-            }
+            var databaseInfo = _metadataReader.GetDatabaseInfo(connectionString, _tableSelectionSet);
 
             LoadEntityTypes(modelBuilder, databaseInfo);
             LoadIndexes(modelBuilder, databaseInfo);
@@ -59,7 +56,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             return modelBuilder.Model;
         }
 
-        private void LoadForeignKeys(ModelBuilder modelBuilder, DatabaseInfo databaseInfo)
+        private void LoadForeignKeys(ModelBuilder modelBuilder, Database databaseInfo)
         {
             foreach (var fkInfo in databaseInfo.ForeignKeys)
             {
@@ -117,10 +114,10 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             }
         }
 
-        private void LogFailedForeignKey(ForeignKeyInfo foreignKey)
+        private void LogFailedForeignKey(Scaffolding.Model.ForeignKey foreignKey)
             => Logger.LogWarning(SqliteDesignStrings.ForeignKeyScaffoldError(foreignKey.TableName, string.Join(",", foreignKey.From)));
 
-        private void LoadIndexes(ModelBuilder modelBuilder, DatabaseInfo databaseInfo)
+        private void LoadIndexes(ModelBuilder modelBuilder, Database databaseInfo)
         {
             foreach (var index in databaseInfo.Indexes)
             {
@@ -139,7 +136,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             }
         }
 
-        private void LoadEntityTypes(ModelBuilder modelBuilder, DatabaseInfo databaseInfo)
+        private void LoadEntityTypes(ModelBuilder modelBuilder, Database databaseInfo)
         {
             foreach (var table in databaseInfo.Tables)
             {
@@ -153,7 +150,9 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 
                         foreach (var column in databaseInfo.Columns.Where(c => c.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase)))
                         {
-                            var property = builder.Property(column.ClrType, column.Name)
+                            // TODO log bad datatypes
+                            var clrType = _typeMapper.GetClrType(column.DataType, nullable: column.IsNullable);
+                            var property = builder.Property(clrType, column.Name)
                                 .HasSqliteColumnName(column.Name);
 
                             if (!string.IsNullOrEmpty(column.DataType))

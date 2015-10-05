@@ -4,7 +4,7 @@
 using System;
 using JetBrains.Annotations;
 
-namespace Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal
+namespace Microsoft.Data.Entity.Scaffolding
 {
     // TODO:
     // Does not support schema or table names containing FilterSeparator.

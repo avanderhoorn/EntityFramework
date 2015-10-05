@@ -5,37 +5,45 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
-using Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering.Model;
+using Microsoft.Data.Entity.Scaffolding.Model;
 using Microsoft.Data.Entity.Utilities;
 using Microsoft.Data.Sqlite;
 
-namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
+namespace Microsoft.Data.Entity.Scaffolding
 {
-    public class SqliteMetadataReader
+    public class SqliteMetadataReader : IMetadataReader
     {
-        private readonly SqliteReverseTypeMapper _typeMapper;
+        public virtual Database GetDatabaseInfo([NotNull] string connectionString) 
+            => GetDatabaseInfo(connectionString, TableSelectionSet.InclusiveAll);
 
-        public SqliteMetadataReader([NotNull] SqliteReverseTypeMapper typeMapper)
+        public virtual Database GetDatabaseInfo([NotNull] string connectionString, [NotNull] TableSelectionSet tableSelectionSet)
         {
-            _typeMapper = typeMapper;
-        }
+            Check.NotEmpty(connectionString, nameof(connectionString));
+            Check.NotNull(tableSelectionSet, nameof(tableSelectionSet));
 
-        public virtual DatabaseInfo ReadDatabaseInfo([NotNull] SqliteConnection connection, [CanBeNull] TableSelectionSet tableSelectionSet = null)
-        {
-            Check.NotNull(connection, nameof(connection));
+            Database databaseInfo;
 
-            var databaseInfo = new DatabaseInfo();
-            GetSqliteMaster(connection, databaseInfo, tableSelectionSet ?? TableSelectionSet.InclusiveAll);
-            GetColumns(connection, databaseInfo);
-            GetIndexes(connection, databaseInfo);
-
-            foreach (var table in databaseInfo.Tables)
+            using (var connection = new SqliteConnection(connectionString))
             {
-                SqliteDmlParser.ParseTableDefinition(databaseInfo, table);
-            }
+                connection.Open();
 
-            GetForeignKeys(connection, databaseInfo);
+                databaseInfo = new Database
+                {
+                    Name = connection.DataSource
+                };
+
+                GetSqliteMaster(connection, databaseInfo, tableSelectionSet);
+                GetColumns(connection, databaseInfo);
+                GetIndexes(connection, databaseInfo);
+
+                foreach (var table in databaseInfo.Tables)
+                {
+                    SqliteDmlParser.ParseTableDefinition(databaseInfo, table);
+                }
+
+                GetForeignKeys(connection, databaseInfo);
+            }
+     
             return databaseInfo;
         }
 
@@ -49,9 +57,9 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             Pk
         }
 
-        private void GetColumns(SqliteConnection connection, DatabaseInfo databaseInfo)
+        private void GetColumns(SqliteConnection connection, Database databaseInfo)
         {
-            databaseInfo.Columns = new List<ColumnInfo>();
+            databaseInfo.Columns = new List<Column>();
 
             foreach (var table in databaseInfo.Tables)
             {
@@ -67,12 +75,11 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                         var typeName = reader.GetString((int)TableInfoColumns.Type);
                         var notNull = isPk || reader.GetBoolean((int)TableInfoColumns.NotNull);
 
-                        var column = new ColumnInfo
+                        var column = new Column
                         {
                             TableName = table.Name,
                             Name = reader.GetString((int)TableInfoColumns.Name),
                             DataType = typeName,
-                            ClrType = _typeMapper.GetClrType(typeName, nullable: !notNull),
                             IsPrimaryKey = reader.GetBoolean((int)TableInfoColumns.Pk),
                             IsNullable = !notNull,
                             DefaultValue = reader.GetValue((int)TableInfoColumns.DefaultValue) as string,
@@ -92,7 +99,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             Name
         }
 
-        private void GetIndexes(SqliteConnection connection, DatabaseInfo databaseInfo)
+        private void GetIndexes(SqliteConnection connection, Database databaseInfo)
         {
             foreach (var index in databaseInfo.Indexes)
             {
@@ -124,7 +131,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             databaseInfo.Indexes = databaseInfo.Indexes.Where(i => i.Columns.Count > 0).ToList();
         }
 
-        private void GetSqliteMaster(SqliteConnection connection, DatabaseInfo databaseInfo, TableSelectionSet tableSelectionSet)
+        private void GetSqliteMaster(SqliteConnection connection, Database databaseInfo, TableSelectionSet tableSelectionSet)
         {
             var command = connection.CreateCommand();
             command.CommandText = "SELECT type, name, sql, tbl_name FROM sqlite_master";
@@ -141,7 +148,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                         && name != "sqlite_sequence"
                         && tableSelectionSet.Allows(TableSelection.Any, name))
                     {
-                        databaseInfo.Tables.Add(new TableInfo
+                        databaseInfo.Tables.Add(new Table
                         {
                             Name = name,
                             CreateStatement = sql
@@ -149,7 +156,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                     }
                     else if (type == "index" && tableSelectionSet.Allows(TableSelection.Any, tableName))
                     {
-                        databaseInfo.Indexes.Add(new IndexInfo
+                        databaseInfo.Indexes.Add(new Index
                         {
                             Name = name,
                             TableName = tableName,
@@ -172,14 +179,14 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             Match
         }
 
-        private void GetForeignKeys(SqliteConnection connection, DatabaseInfo databaseInfo)
+        private void GetForeignKeys(SqliteConnection connection, Database databaseInfo)
         {
             foreach (var dependentTable in databaseInfo.Tables)
             {
                 var fkList = connection.CreateCommand();
                 fkList.CommandText = $"PRAGMA foreign_key_list(\"{dependentTable.Name.Replace("\"", "\"\"")}\");";
 
-                var tableForeignKeys = new Dictionary<int, ForeignKeyInfo>();
+                var tableForeignKeys = new Dictionary<int, ForeignKey>();
 
                 using (var reader = fkList.ExecuteReader())
                 {
@@ -187,10 +194,10 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                     {
                         var id = reader.GetInt32((int)ForeignKeyList.Id);
                         var principalTable = reader.GetString((int)ForeignKeyList.Table);
-                        ForeignKeyInfo foreignKey;
+                        ForeignKey foreignKey;
                         if (!tableForeignKeys.TryGetValue(id, out foreignKey))
                         {
-                            foreignKey = new ForeignKeyInfo
+                            foreignKey = new ForeignKey
                             {
                                 TableName = dependentTable.Name,
                                 PrincipalTableName = principalTable

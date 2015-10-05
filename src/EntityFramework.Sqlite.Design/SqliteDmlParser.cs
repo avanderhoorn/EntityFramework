@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering.Model;
+using Microsoft.Data.Entity.Scaffolding.Model;
 
-namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
+namespace Microsoft.Data.Entity.Scaffolding
 {
     internal static class SqliteDmlParser
     {
@@ -19,7 +19,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             "FOREIGN"
         };
 
-        public static void ParseTableDefinition(DatabaseInfo databaseInfo, TableInfo table)
+        public static void ParseTableDefinition(Database databaseInfo, Table table)
         {
             var statements = ParseStatements(table.CreateStatement).ToList();
             var i = 0;
@@ -66,7 +66,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             return SafeSplit(statementsChunk, ',').Select(s => s.Trim());
         }
 
-        public static void ParseColumnDefinition(DatabaseInfo databaseInfo, TableInfo table, string statement)
+        public static void ParseColumnDefinition(Database databaseInfo, Table table, string statement)
         {
             var paramName = UnescapeString(SafeSplit(statement, ' ').First());
             var column = databaseInfo.Columns.FirstOrDefault(c =>
@@ -90,7 +90,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             }
         }
 
-        public static void ParseConstraints(DatabaseInfo databaseInfo, TableInfo table, string statement)
+        public static void ParseConstraints(Database databaseInfo, Table table, string statement)
         {
             var constraint = statement.Split(' ', '(')[0];
             if (constraint.Equals("UNIQUE", StringComparison.OrdinalIgnoreCase))
@@ -99,7 +99,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             }
         }
 
-        public static void ParseInlineUniqueConstraint(DatabaseInfo databaseInfo, TableInfo table, string statement)
+        public static void ParseInlineUniqueConstraint(Database databaseInfo, Table table, string statement)
         {
             var start = statement.IndexOf('(') + 1;
             var paramChunk = statement.Substring(start, statement.LastIndexOf(')') - start);

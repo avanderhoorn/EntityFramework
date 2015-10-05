@@ -3,12 +3,14 @@
 
 using JetBrains.Annotations;
 
-namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering.Model
+namespace Microsoft.Data.Entity.Scaffolding.Model
 {
-    public class TableInfo
+    public class Table
     {
         public virtual string Name { get; [param: NotNull] set; }
-        public virtual string SchemaName { get; [param: NotNull] set; }
-        public virtual string CreateStatement { get; [param: NotNull] set; }
+
+        // optional
+        public virtual string SchemaName { get; [param: CanBeNull] set; }
+        public virtual string CreateStatement { get; [param: CanBeNull] set; }
     }
 }
