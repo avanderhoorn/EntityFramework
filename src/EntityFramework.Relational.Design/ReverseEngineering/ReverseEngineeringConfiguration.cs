@@ -5,8 +5,8 @@ using System;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Data.Entity.Internal;
-using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
 using Microsoft.Data.Entity.Relational.Design.Utilities;
+using Microsoft.Data.Entity.Scaffolding;
 
 namespace Microsoft.Data.Entity.Relational.Design.ReverseEngineering
 {

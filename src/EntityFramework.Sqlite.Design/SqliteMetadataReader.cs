@@ -13,7 +13,7 @@ namespace Microsoft.Data.Entity.Scaffolding
 {
     public class SqliteMetadataReader : IMetadataReader
     {
-        public virtual Database GetDatabaseInfo([NotNull] string connectionString) 
+        public virtual Database GetDatabaseInfo([NotNull] string connectionString)
             => GetDatabaseInfo(connectionString, TableSelectionSet.InclusiveAll);
 
         public virtual Database GetDatabaseInfo([NotNull] string connectionString, [NotNull] TableSelectionSet tableSelectionSet)
@@ -21,13 +21,11 @@ namespace Microsoft.Data.Entity.Scaffolding
             Check.NotEmpty(connectionString, nameof(connectionString));
             Check.NotNull(tableSelectionSet, nameof(tableSelectionSet));
 
-            Database databaseInfo;
-
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
 
-                databaseInfo = new Database
+                var databaseInfo = new Database
                 {
                     Name = connection.DataSource
                 };
@@ -42,9 +40,9 @@ namespace Microsoft.Data.Entity.Scaffolding
                 }
 
                 GetForeignKeys(connection, databaseInfo);
+
+                return databaseInfo;
             }
-     
-            return databaseInfo;
         }
 
         private enum TableInfoColumns
