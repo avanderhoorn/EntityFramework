@@ -145,7 +145,7 @@ namespace Microsoft.Data.Entity.Update
         }
 
         protected virtual void PopulateParameters(
-            [NotNull] RelationalCommandBuilder commandBuilder,
+            [NotNull] IRelationalCommandBuilder commandBuilder,
             [NotNull] ColumnModification columnModification)
         {
             if (columnModification.ParameterName != null)

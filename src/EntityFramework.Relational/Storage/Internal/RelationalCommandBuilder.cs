@@ -8,9 +8,9 @@ using Microsoft.Data.Entity.Internal;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Utilities;
 
-namespace Microsoft.Data.Entity.Storage
+namespace Microsoft.Data.Entity.Storage.Internal
 {
-    public class RelationalCommandBuilder
+    public class RelationalCommandBuilder : IRelationalCommandBuilder
     {
         private readonly IRelationalTypeMapper _typeMapper;
         private readonly IndentedStringBuilder _stringBuilder = new IndentedStringBuilder();
@@ -23,14 +23,14 @@ namespace Microsoft.Data.Entity.Storage
             _typeMapper = typeMapper;
         }
 
-        public virtual RelationalCommandBuilder AppendLine()
+        public virtual IRelationalCommandBuilder AppendLine()
         {
             _stringBuilder.AppendLine();
 
             return this;
         }
 
-        public virtual RelationalCommandBuilder Append([NotNull] object o)
+        public virtual IRelationalCommandBuilder Append([NotNull] object o)
         {
             Check.NotNull(o, nameof(o));
 
@@ -39,7 +39,7 @@ namespace Microsoft.Data.Entity.Storage
             return this;
         }
 
-        public virtual RelationalCommandBuilder AppendLine([NotNull] object o)
+        public virtual IRelationalCommandBuilder AppendLine([NotNull] object o)
         {
             Check.NotNull(o, nameof(o));
 
@@ -48,7 +48,7 @@ namespace Microsoft.Data.Entity.Storage
             return this;
         }
 
-        public virtual RelationalCommandBuilder AppendLines([NotNull] object o)
+        public virtual IRelationalCommandBuilder AppendLines([NotNull] object o)
         {
             Check.NotNull(o, nameof(o));
 
@@ -57,7 +57,7 @@ namespace Microsoft.Data.Entity.Storage
             return this;
         }
 
-        public virtual RelationalCommandBuilder AddParameter(
+        public virtual IRelationalCommandBuilder AddParameter(
             [NotNull] string name,
             [CanBeNull] object value)
         {
@@ -73,7 +73,7 @@ namespace Microsoft.Data.Entity.Storage
             return this;
         }
 
-        public virtual RelationalCommandBuilder AddParameter(
+        public virtual IRelationalCommandBuilder AddParameter(
             [NotNull] string name,
             [CanBeNull] object value,
             [NotNull] Type type)
@@ -99,7 +99,7 @@ namespace Microsoft.Data.Entity.Storage
             return this;
         }
 
-        public virtual RelationalCommandBuilder AddParameter(
+        public virtual IRelationalCommandBuilder AddParameter(
             [NotNull] string name,
             [CanBeNull] object value,
             [NotNull] IProperty property)
@@ -117,7 +117,7 @@ namespace Microsoft.Data.Entity.Storage
             return this;
         }
 
-        public virtual RelationalCommand BuildRelationalCommand()
+        public virtual IRelationalCommand BuildRelationalCommand()
                 => new RelationalCommand(
                     _stringBuilder.ToString(),
                     _parameters);
@@ -127,14 +127,14 @@ namespace Microsoft.Data.Entity.Storage
 
         public virtual int Length => _stringBuilder.Length;
 
-        public virtual RelationalCommandBuilder IncrementIndent()
+        public virtual IRelationalCommandBuilder IncrementIndent()
         {
             _stringBuilder.IncrementIndent();
 
             return this;
         }
 
-        public virtual RelationalCommandBuilder DecrementIndent()
+        public virtual IRelationalCommandBuilder DecrementIndent()
         {
             _stringBuilder.DecrementIndent();
 

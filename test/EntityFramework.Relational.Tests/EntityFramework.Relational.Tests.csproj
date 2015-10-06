@@ -61,6 +61,7 @@
     <Compile Include="Storage\RelationalSqlGeneratorTest.cs" />
     <Compile Include="Storage\SqlCommandBuilderTest.cs" />
     <Compile Include="Storage\SqlGeneratorTestBase.cs" />
+    <Compile Include="TestUtilities\FakeRelationalCommandBuilder.cs" />
     <Compile Include="TestUtilities\FakeProvider\FakeRelationalTypeMapper.cs" />
     <Compile Include="Update\UpdateSqlGeneratorTest.cs" />
     <Compile Include="Update\UpdateSqlGeneratorTestBase.cs" />
