@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Microsoft.Data.Entity.Scaffolding.Model
+namespace Microsoft.Data.Entity.Relational.Design.Model
 {
     public class ForeignKey
     {
@@ -17,10 +17,10 @@ namespace Microsoft.Data.Entity.Scaffolding.Model
         public virtual string Name { get; [param: CanBeNull] set; }
         public virtual string SchemaName { get; [param: CanBeNull] set; }
 
-        // TODO foreign key triggers
-        //public virtual string OnDelete { get; [param: NotNull] set; }
+        // TODO https://github.com/aspnet/EntityFramework/issues/3330
+        //public virtual ReferentialAction OnDelete { get; [param: NotNull] set; }
 
-        // TODO https://github.com/aspnet/EntityFramework/issues/333
+        // TODO foreign key triggers
         //public virtual string OnUpdate { get; [param: NotNull] set; }
 
     }

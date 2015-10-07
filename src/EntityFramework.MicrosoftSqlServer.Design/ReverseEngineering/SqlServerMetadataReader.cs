@@ -4,9 +4,11 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using Microsoft.Data.Entity.Migrations;
-using Microsoft.Data.Entity.Scaffolding.Model;
+using Microsoft.Data.Entity.Relational.Design;
+using Microsoft.Data.Entity.Relational.Design.Model;
+using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
 
-namespace Microsoft.Data.Entity.Scaffolding
+namespace Microsoft.Data.Entity.SqlServer.Design.ReverseEngineering
 {
     public class SqlServerMetadataReader : IMetadataReader
     {

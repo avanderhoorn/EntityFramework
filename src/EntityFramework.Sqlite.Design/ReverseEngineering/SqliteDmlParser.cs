@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Data.Entity.Scaffolding.Model;
+using Microsoft.Data.Entity.Relational.Design.Model;
 
-namespace Microsoft.Data.Entity.Scaffolding
+namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 {
     internal static class SqliteDmlParser
     {
@@ -19,9 +19,9 @@ namespace Microsoft.Data.Entity.Scaffolding
             "FOREIGN"
         };
 
-        public static void ParseTableDefinition(Database databaseInfo, Table table)
+        public static void ParseTableDefinition(Database databaseInfo, Table table, string sql)
         {
-            var statements = ParseStatements(table.CreateStatement).ToList();
+            var statements = ParseStatements(sql).ToList();
             var i = 0;
             for (; i < statements.Count; i++)
             {

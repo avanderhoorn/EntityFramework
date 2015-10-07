@@ -51,7 +51,7 @@
     <Compile Include="ReverseEngineering\SqlServerConfigurationFactory.cs" />
     <Compile Include="ReverseEngineering\SqlServerDesignTimeMetadataProviderFactory.cs" />
     <Compile Include="ReverseEngineering\SqlServerMetadataModelProvider.cs" />
-    <Compile Include="SqlServerMetadataReader.cs" />
+    <Compile Include="ReverseEngineering\SqlServerMetadataReader.cs" />
     <Compile Include="Utilities\SqlServerLiteralUtilities.cs" />
     <Compile Include="Utilities\SqlServerTypeMapping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

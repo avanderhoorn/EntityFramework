@@ -47,7 +47,7 @@
     <Compile Include="..\Shared\LoggingExtensions.cs">
       <Link>LoggingExtensions.cs</Link>
     </Compile>
-    <Compile Include="IMetadataReader.cs" />
+    <Compile Include="ReverseEngineering\IMetadataReader.cs" />
     <Compile Include="Model\Column.cs" />
     <Compile Include="Model\Database.cs" />
     <Compile Include="Model\ForeignKey.cs" />
@@ -100,9 +100,9 @@
     <Compile Include="ReverseEngineering\ReverseEngineeringConfiguration.cs" />
     <Compile Include="ReverseEngineering\ReverseEngineeringGenerator.cs" />
     <Compile Include="ReverseEngineering\RelationalMetadataModelProvider.cs" />
-    <Compile Include="TableSelection.cs" />
-    <Compile Include="TableSelectionSet.cs" />
-    <Compile Include="TableSelectionSetBuilder.cs" />
+    <Compile Include="ReverseEngineering\Internal\TableSelection.cs" />
+    <Compile Include="ReverseEngineering\Internal\TableSelectionSet.cs" />
+    <Compile Include="ReverseEngineering\Internal\TableSelectionSetBuilder.cs" />
     <Compile Include="Utilities\CSharpUtilities.cs" />
     <Compile Include="Utilities\ModelUtilities.cs" />
     <Compile Include="Utilities\PlatformHelper.cs" />

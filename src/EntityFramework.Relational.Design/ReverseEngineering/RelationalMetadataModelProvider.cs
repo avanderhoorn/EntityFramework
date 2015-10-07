@@ -7,8 +7,8 @@ using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.Data.Entity.Internal;
 using Microsoft.Data.Entity.Metadata;
+using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
 using Microsoft.Data.Entity.Relational.Design.Utilities;
-using Microsoft.Data.Entity.Scaffolding;
 using Microsoft.Data.Entity.Utilities;
 using Microsoft.Extensions.Logging;
 
@@ -101,7 +101,7 @@ namespace Microsoft.Data.Entity.Relational.Design.ReverseEngineering
             Check.NotNull(relationalModel, nameof(relationalModel));
             Check.NotNull(nameMapper, nameof(nameMapper));
 
-            var codeGenModel = new Model();
+            var codeGenModel = new Metadata.Model();
             foreach (var relationalEntityType in relationalModel.EntityTypes.Cast<EntityType>())
             {
                 var codeGenEntityType = codeGenModel

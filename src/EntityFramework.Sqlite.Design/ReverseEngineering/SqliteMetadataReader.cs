@@ -5,17 +5,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Microsoft.Data.Entity.Scaffolding.Model;
+using Microsoft.Data.Entity.Relational.Design;
+using Microsoft.Data.Entity.Relational.Design.Model;
+using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
 using Microsoft.Data.Entity.Utilities;
 using Microsoft.Data.Sqlite;
 
-namespace Microsoft.Data.Entity.Scaffolding
+namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 {
     public class SqliteMetadataReader : IMetadataReader
     {
-        public virtual Database GetDatabaseInfo([NotNull] string connectionString)
-            => GetDatabaseInfo(connectionString, TableSelectionSet.InclusiveAll);
-
         public virtual Database GetDatabaseInfo([NotNull] string connectionString, [NotNull] TableSelectionSet tableSelectionSet)
         {
             Check.NotEmpty(connectionString, nameof(connectionString));
@@ -30,19 +29,61 @@ namespace Microsoft.Data.Entity.Scaffolding
                     Name = connection.DataSource
                 };
 
-                GetSqliteMaster(connection, databaseInfo, tableSelectionSet);
+                var definitions = GetSqliteMaster(connection, databaseInfo, tableSelectionSet);
+
                 GetColumns(connection, databaseInfo);
-                GetIndexes(connection, databaseInfo);
+                GetIndexes(connection, databaseInfo, definitions);
 
                 foreach (var table in databaseInfo.Tables)
                 {
-                    SqliteDmlParser.ParseTableDefinition(databaseInfo, table);
+                    SqliteDmlParser.ParseTableDefinition(databaseInfo, table, definitions.Tables[table.Name]);
                 }
 
                 GetForeignKeys(connection, databaseInfo);
 
                 return databaseInfo;
             }
+        }
+
+        private SqlDefinitions GetSqliteMaster(SqliteConnection connection, Database databaseInfo, TableSelectionSet tableSelectionSet)
+        {
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT type, name, sql, tbl_name FROM sqlite_master";
+            var definitions = new SqlDefinitions();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var type = reader.GetString(0);
+                    var name = reader.GetString(1);
+                    var sql = reader.GetValue(2) as string; // can be null
+                    var tableName = reader.GetString(3);
+
+                    if (type == "table"
+                        && name != "sqlite_sequence"
+                        && tableSelectionSet.Allows(TableSelection.Any, name))
+                    {
+                        databaseInfo.Tables.Add(new Table
+                        {
+                            Name = name,
+                            CreateStatement = sql
+                        });
+                        definitions.Tables[name] = sql;
+                    }
+                    else if (type == "index"
+                             && tableSelectionSet.Allows(TableSelection.Any, tableName))
+                    {
+                        databaseInfo.Indexes.Add(new Index
+                        {
+                            Name = name,
+                            TableName = tableName
+                        });
+
+                        definitions.Indexes[name] = sql;
+                    }
+                }
+            }
+            return definitions;
         }
 
         private enum TableInfoColumns
@@ -97,7 +138,7 @@ namespace Microsoft.Data.Entity.Scaffolding
             Name
         }
 
-        private void GetIndexes(SqliteConnection connection, Database databaseInfo)
+        private void GetIndexes(SqliteConnection connection, Database databaseInfo, SqlDefinitions definitions)
         {
             foreach (var index in databaseInfo.Indexes)
             {
@@ -115,10 +156,12 @@ namespace Microsoft.Data.Entity.Scaffolding
                             index.Columns.Add(name);
                         }
 
-                        if (!string.IsNullOrEmpty(index.CreateStatement))
+                        var sql = definitions.Indexes[index.Name];
+
+                        if (!string.IsNullOrEmpty(sql))
                         {
-                            var uniqueKeyword = index.CreateStatement.IndexOf("UNIQUE", StringComparison.OrdinalIgnoreCase);
-                            var indexKeyword = index.CreateStatement.IndexOf("INDEX", StringComparison.OrdinalIgnoreCase);
+                            var uniqueKeyword = sql.IndexOf("UNIQUE", StringComparison.OrdinalIgnoreCase);
+                            var indexKeyword = sql.IndexOf("INDEX", StringComparison.OrdinalIgnoreCase);
 
                             index.IsUnique = uniqueKeyword > 0 && uniqueKeyword < indexKeyword;
                         }
@@ -127,42 +170,6 @@ namespace Microsoft.Data.Entity.Scaffolding
             }
 
             databaseInfo.Indexes = databaseInfo.Indexes.Where(i => i.Columns.Count > 0).ToList();
-        }
-
-        private void GetSqliteMaster(SqliteConnection connection, Database databaseInfo, TableSelectionSet tableSelectionSet)
-        {
-            var command = connection.CreateCommand();
-            command.CommandText = "SELECT type, name, sql, tbl_name FROM sqlite_master";
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    var type = reader.GetString(0);
-                    var name = reader.GetString(1);
-                    var sql = reader.GetValue(2) as string; // can be null
-                    var tableName = reader.GetString(3);
-
-                    if (type == "table"
-                        && name != "sqlite_sequence"
-                        && tableSelectionSet.Allows(TableSelection.Any, name))
-                    {
-                        databaseInfo.Tables.Add(new Table
-                        {
-                            Name = name,
-                            CreateStatement = sql
-                        });
-                    }
-                    else if (type == "index" && tableSelectionSet.Allows(TableSelection.Any, tableName))
-                    {
-                        databaseInfo.Indexes.Add(new Index
-                        {
-                            Name = name,
-                            TableName = tableName,
-                            CreateStatement = sql
-                        });
-                    }
-                }
-            }
         }
 
         private enum ForeignKeyList
@@ -209,6 +216,12 @@ namespace Microsoft.Data.Entity.Scaffolding
 
                 databaseInfo.ForeignKeys.AddRange(tableForeignKeys.Values);
             }
+        }
+
+        private class SqlDefinitions
+        {
+            public readonly Dictionary<string, string> Tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            public readonly Dictionary<string, string> Indexes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
     }
 }

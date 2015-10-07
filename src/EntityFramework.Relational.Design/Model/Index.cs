@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Microsoft.Data.Entity.Scaffolding.Model
+namespace Microsoft.Data.Entity.Relational.Design.Model
 {
     public class Index
     {
@@ -15,6 +15,5 @@ namespace Microsoft.Data.Entity.Scaffolding.Model
         //optional
         public virtual string SchemaName { get; [param: CanBeNull] set; }
         public virtual bool IsUnique { get; [param: CanBeNull] set; }
-        public virtual string CreateStatement { get; [param: CanBeNull] set; }
     }
 }

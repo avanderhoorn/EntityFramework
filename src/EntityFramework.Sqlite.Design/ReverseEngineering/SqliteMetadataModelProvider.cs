@@ -9,12 +9,13 @@ using Microsoft.Data.Entity.Internal;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Metadata.Conventions;
 using Microsoft.Data.Entity.Metadata.Internal;
+using Microsoft.Data.Entity.Relational.Design;
+using Microsoft.Data.Entity.Relational.Design.Model;
 using Microsoft.Data.Entity.Relational.Design.ReverseEngineering;
 using Microsoft.Data.Entity.Relational.Design.Utilities;
-using Microsoft.Data.Entity.Scaffolding;
-using Microsoft.Data.Entity.Scaffolding.Model;
 using Microsoft.Data.Entity.Utilities;
 using Microsoft.Extensions.Logging;
+using ForeignKey = Microsoft.Data.Entity.Relational.Design.Model.ForeignKey;
 
 namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 {
@@ -114,7 +115,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
             }
         }
 
-        private void LogFailedForeignKey(Scaffolding.Model.ForeignKey foreignKey)
+        private void LogFailedForeignKey(ForeignKey foreignKey)
             => Logger.LogWarning(SqliteDesignStrings.ForeignKeyScaffoldError(foreignKey.TableName, string.Join(",", foreignKey.From)));
 
         private void LoadIndexes(ModelBuilder modelBuilder, Database databaseInfo)

@@ -59,8 +59,8 @@
     <Compile Include="Properties\SqliteDesignStrings.Designer.cs">
       <DependentUpon>SqliteDesignStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="SqliteDmlParser.cs" />
-    <Compile Include="SqliteMetadataReader.cs" />
+    <Compile Include="ReverseEngineering\SqliteDmlParser.cs" />
+    <Compile Include="ReverseEngineering\SqliteMetadataReader.cs" />
     <Compile Include="SqliteReverseTypeMapper.cs" />
     <Content Include="..\..\tools\Resources.tt">
       <Link>Properties\Resources.tt</Link>
