@@ -65,8 +65,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                     {
                         databaseInfo.Tables.Add(new Table
                         {
-                            Name = name,
-                            CreateStatement = sql
+                            Name = name
                         });
                         definitions.Tables[name] = sql;
                     }

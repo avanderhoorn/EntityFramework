@@ -11,6 +11,5 @@ namespace Microsoft.Data.Entity.Relational.Design.Model
 
         // optional
         public virtual string SchemaName { get; [param: CanBeNull] set; }
-        public virtual string CreateStatement { get; [param: CanBeNull] set; }
     }
 }
