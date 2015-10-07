@@ -92,6 +92,61 @@ namespace Microsoft.Data.Entity.Storage.Internal
                 };
         }
 
+        private readonly Dictionary<string, Type> _clrMappings
+            = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            {
+                // exact numerics
+                { "bigint", typeof(long) },
+                { "bit", typeof(bool) },
+                { "decimal", typeof(decimal) },
+                { "int", typeof(int) },
+                { "money", typeof(decimal) },
+                { "numeric", typeof(decimal) },
+                { "smallint", typeof(short) },
+                { "smallmoney", typeof(decimal) },
+                { "tinyint", typeof(byte) },
+
+                // approximate numerics
+                { "float", typeof(double) },
+                { "real", typeof(float) },
+
+                // date and time
+                { "date", typeof(DateTime) },
+                { "datetime", typeof(DateTime) },
+                { "datetime2", typeof(DateTime) },
+                { "datetimeoffset", typeof(DateTimeOffset) },
+                { "smalldatetime", typeof(DateTime) },
+                { "time", typeof(DateTime) },
+
+                // character strings
+                { "char", typeof(string) },
+                { "text", typeof(string) },
+                { "varchar", typeof(string) },
+
+                // unicode character strings
+                { "nchar", typeof(string) },
+                { "ntext", typeof(string) },
+                { "nvarchar", typeof(string) },
+
+                // binary
+                { "binary", typeof(byte[]) },
+                { "image", typeof(byte[]) },
+                { "varbinary", typeof(byte[]) },
+
+                //TODO other
+                //{ "cursor", typeof(TODO) },
+                //{ "hierarchyid", typeof(TODO) },
+                //{ "sql_variant", typeof(TODO) },
+                //{ "table", typeof(TODO) },
+                { "timestamp", typeof(byte[]) }, // note: rowversion is a synonym but SQL Server stores the data type as 'timestamp'
+                { "uniqueidentifier", typeof(Guid) }
+                //{ "xml", typeof(TODO) },
+
+                //TODO spatial
+                //{ "geography", typeof(TODO) },
+                //{ "geometry", typeof(TODO) },
+            };
+
         protected override string GetColumnType(IProperty property) => property.SqlServer().ColumnType;
 
         protected override IReadOnlyDictionary<Type, RelationalTypeMapping> SimpleMappings
@@ -99,6 +154,13 @@ namespace Microsoft.Data.Entity.Storage.Internal
 
         protected override IReadOnlyDictionary<string, RelationalTypeMapping> SimpleNameMappings
             => _simpleNameMappings;
+
+        public override Type FindClrType(string columnTypeName)
+        {
+            Type clrType = null;
+            _clrMappings.TryGetValue(columnTypeName, out clrType);
+            return clrType;
+        }
 
         public override RelationalTypeMapping GetMapping(Type clrType)
         {

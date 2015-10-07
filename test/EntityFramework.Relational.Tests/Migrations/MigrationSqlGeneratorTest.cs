@@ -289,6 +289,7 @@ namespace Microsoft.Data.Entity.Migrations
                 = new Dictionary<string, RelationalTypeMapping>();
 
             protected override string GetColumnType(IProperty property) => null;
+            public override Type FindClrType(string columnTypeName) => null;
         }
 
         private class ConcreteMigrationSqlGenerator : MigrationsSqlGenerator

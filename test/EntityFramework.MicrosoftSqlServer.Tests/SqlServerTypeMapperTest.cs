@@ -441,6 +441,22 @@ namespace Microsoft.Data.Entity.SqlServer.Tests
             Assert.Equal("NULL", RelationalTypeMapperExtensions.GetMapping(null, "Itz").DefaultTypeName);
         }
 
+        [Fact]
+        public void Returns_null_for_unrecognized_types()
+        {
+            Assert.Null(new SqlServerTypeMapper().FindClrType("magic"));
+        }
+
+        [Theory]
+        [InlineData("VARCHAR", typeof(string))]
+        [InlineData("VarCHaR", typeof(string))] // case-insensitive
+        [InlineData("float", typeof(double))] // This is correct. SQL Server 'float' type maps to C# double
+        [InlineData("timestamp", typeof(byte[]))] // note: rowversion is a synonym but SQL Server stores the data type as 'timestamp'
+        public void It_finds_clr_type(string typeName, Type clrType)
+        {
+            Assert.Equal(clrType, new SqlServerTypeMapper().FindClrType(typeName));
+        }
+
         private enum LongEnum : long
         {
         }

@@ -45,6 +45,8 @@ namespace Microsoft.Data.Entity.Storage
                        : GetCustomMapping(property));
         }
 
+        public abstract Type FindClrType(string columnTypeName);
+
         public virtual RelationalTypeMapping GetMapping(Type clrType)
         {
             Check.NotNull(clrType, nameof(clrType));

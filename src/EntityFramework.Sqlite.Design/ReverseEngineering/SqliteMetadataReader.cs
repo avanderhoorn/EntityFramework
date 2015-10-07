@@ -7,6 +7,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.Data.Entity.Relational.Design.ReverseEngineering.Internal;
 using Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering.Model;
+using Microsoft.Data.Entity.Storage.Internal;
 using Microsoft.Data.Entity.Utilities;
 using Microsoft.Data.Sqlite;
 
@@ -14,9 +15,9 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
 {
     public class SqliteMetadataReader
     {
-        private readonly SqliteReverseTypeMapper _typeMapper;
+        private readonly SqliteTypeMapper _typeMapper;
 
-        public SqliteMetadataReader([NotNull] SqliteReverseTypeMapper typeMapper)
+        public SqliteMetadataReader([NotNull] SqliteTypeMapper typeMapper)
         {
             _typeMapper = typeMapper;
         }
@@ -67,13 +68,19 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                         var isPk = reader.GetBoolean((int)TableInfoColumns.Pk);
                         var typeName = reader.GetString((int)TableInfoColumns.Type);
                         var notNull = isPk || reader.GetBoolean((int)TableInfoColumns.NotNull);
+                        var clrType = _typeMapper.FindClrType(typeName);
+
+                        if (!notNull)
+                        {
+                            clrType = clrType.MakeNullable();
+                        }
 
                         var column = new ColumnInfo
                         {
                             TableName = table.Name,
                             Name = reader.GetString((int)TableInfoColumns.Name),
                             DataType = typeName,
-                            ClrType = _typeMapper.GetClrType(typeName, nullable: !notNull),
+                            ClrType = clrType,
                             IsPrimaryKey = reader.GetBoolean((int)TableInfoColumns.Pk),
                             IsNullable = !notNull,
                             DefaultValue = reader.GetValue((int)TableInfoColumns.DefaultValue) as string,

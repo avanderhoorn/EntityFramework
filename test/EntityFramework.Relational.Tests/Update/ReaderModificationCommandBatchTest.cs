@@ -730,6 +730,7 @@ namespace Microsoft.Data.Entity.Tests.Update
         private class ConcreteTypeMapper : RelationalTypeMapper
         {
             protected override string GetColumnType(IProperty property) => property.TestProvider().ColumnType;
+            public override Type FindClrType(string columnTypeName) => null;
 
             protected override IReadOnlyDictionary<Type, RelationalTypeMapping> SimpleMappings { get; }
                 = new Dictionary<Type, RelationalTypeMapping>

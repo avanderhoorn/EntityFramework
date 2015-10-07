@@ -45,6 +45,9 @@
     <Compile Include="..\Shared\LoggingExtensions.cs">
       <Link>LoggingExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\SharedTypeExtensions.cs">
+      <Link>Extensions\SharedTypeExtensions.cs</Link>
+    </Compile>
     <Compile Include="Properties\InternalsVisibleTo.cs" />
     <Compile Include="..\..\tools\Resources.cs">
       <Link>Properties\Resources.cs</Link>
@@ -66,7 +69,6 @@
     </Compile>
     <Compile Include="ReverseEngineering\SqliteMetadataReader.cs" />
     <Compile Include="ReverseEngineering\Model\TableInfo.cs" />
-    <Compile Include="SqliteReverseTypeMapper.cs" />
     <Content Include="..\..\tools\Resources.tt">
       <Link>Properties\Resources.tt</Link>
       <Generator>TextTemplatingFileGenerator</Generator>

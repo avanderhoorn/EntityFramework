@@ -105,6 +105,7 @@ Statement3
                 = new Dictionary<string, RelationalTypeMapping>();
 
             protected override string GetColumnType(IProperty property) => property.TestProvider().ColumnType;
+            public override Type FindClrType(string columnTypeName) => null;
         }
     }
 }

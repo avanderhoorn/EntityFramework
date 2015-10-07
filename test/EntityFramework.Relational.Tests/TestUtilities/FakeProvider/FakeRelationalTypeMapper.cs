@@ -17,6 +17,7 @@ namespace Microsoft.Data.Entity.TestUtilities.FakeProvider
         private static readonly RelationalTypeMapping _string = new RelationalTypeMapping("DefaultString", DbType.String);
 
         protected override string GetColumnType(IProperty property) => property.TestProvider().ColumnType;
+        public override Type FindClrType(string columnTypeName) => null;
 
         protected override IReadOnlyDictionary<Type, RelationalTypeMapping> SimpleMappings { get; }
             = new Dictionary<Type, RelationalTypeMapping>
