@@ -281,15 +281,14 @@ namespace Microsoft.Data.Entity.Migrations
             protected override IReadOnlyDictionary<Type, RelationalTypeMapping> SimpleMappings { get; }
                 = new Dictionary<Type, RelationalTypeMapping>
                 {
-                    { typeof(int), new RelationalTypeMapping("int") },
-                    { typeof(string), new RelationalTypeMapping("nvarchar(max)") }
+                    { typeof(int), new RelationalTypeMapping("int", typeof(int)) },
+                    { typeof(string), new RelationalTypeMapping("nvarchar(max)", typeof(string)) }
                 };
 
             protected override IReadOnlyDictionary<string, RelationalTypeMapping> SimpleNameMappings { get; }
                 = new Dictionary<string, RelationalTypeMapping>();
 
             protected override string GetColumnType(IProperty property) => null;
-            public override Type FindClrType(string columnTypeName) => null;
         }
 
         private class ConcreteMigrationSqlGenerator : MigrationsSqlGenerator

@@ -67,7 +67,7 @@ namespace Microsoft.Data.Entity.Storage
                 new RelationalParameter(
                     name,
                     value,
-                    _typeMapper.GetMapping(value),
+                    _typeMapper.GetMappingForValue(value),
                     value?.GetType().IsNullableType() ?? null));
 
             return this;

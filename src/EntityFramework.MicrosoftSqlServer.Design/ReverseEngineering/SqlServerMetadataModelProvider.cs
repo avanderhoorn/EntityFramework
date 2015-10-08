@@ -208,7 +208,7 @@ namespace Microsoft.Data.Entity.SqlServer.Design.ReverseEngineering
 
                 // If we come across a column with a SQL Server type which we can't map we will ignore it.
                 // Note: foreign key properties appear just like any other property in the relational model.
-                var clrPropertyType = _typeMapper.FindClrType(tc.DataType);
+                var clrPropertyType = _typeMapper.GetMapping(tc.DataType)?.ClrType;
                 if (clrPropertyType == null)
                 {
                     Logger.LogWarning(
@@ -424,7 +424,7 @@ namespace Microsoft.Data.Entity.SqlServer.Design.ReverseEngineering
             {
                 property.ValueGenerated = ValueGenerated.OnAdd;
 
-                if (typeof(byte) == _typeMapper.FindClrType(tableColumn.DataType))
+                if (typeof(byte) == _typeMapper.GetMapping(tableColumn.DataType)?.ClrType)
                 {
                     Logger.LogWarning(
                         SqlServerDesignStrings.DataTypeDoesNotAllowSqlServerIdentityStrategy(

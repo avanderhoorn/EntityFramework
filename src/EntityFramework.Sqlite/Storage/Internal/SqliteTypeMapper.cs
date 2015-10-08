@@ -10,10 +10,11 @@ namespace Microsoft.Data.Entity.Storage.Internal
 {
     public class SqliteTypeMapper : RelationalTypeMapper
     {
-        private readonly RelationalTypeMapping _integer = new RelationalTypeMapping("INTEGER");
-        private readonly RelationalTypeMapping _real = new RelationalTypeMapping("REAL");
-        private readonly RelationalTypeMapping _blob = new RelationalTypeMapping("BLOB");
-        private readonly RelationalTypeMapping _text = new RelationalTypeMapping("TEXT");
+        private static readonly RelationalTypeMapping _integer = new RelationalTypeMapping("INTEGER", typeof(long));
+        private static readonly RelationalTypeMapping _real = new RelationalTypeMapping("REAL", typeof(double));
+        private static readonly RelationalTypeMapping _blob = new RelationalTypeMapping("BLOB", typeof(byte[]));
+        private static readonly RelationalTypeMapping _text = new RelationalTypeMapping("TEXT", typeof(string));
+        private static readonly RelationalTypeMapping _default = _text;
 
         private readonly Dictionary<string, RelationalTypeMapping> _simpleNameMappings;
 
@@ -56,38 +57,37 @@ namespace Microsoft.Data.Entity.Storage.Internal
         ///     It uses the same heuristics from
         ///     <see href="https://www.sqlite.org/datatype3.html">"2.1 Determination of Column Affinity"</see>
         /// </summary>
-        public override Type FindClrType([CanBeNull] string typeName)
+        public override RelationalTypeMapping GetMapping(string typeName)
         {
             if (string.IsNullOrEmpty(typeName))
             {
                 return _default;
             }
 
-            Type clrType;
+            RelationalTypeMapping mapping;
             foreach (var rules in _typeRules)
             {
-                clrType = rules(typeName);
-                if (clrType != null)
+                mapping = rules(typeName);
+                if (mapping != null)
                 {
-                    return clrType;
+                    return mapping;
                 }
             }
 
             return _default;
         }
 
-        private static readonly Type _default = typeof(string);
 
-        private readonly Func<string, Type>[] _typeRules =
+        private readonly Func<string, RelationalTypeMapping>[] _typeRules =
         {
-            name => Contains(name, "INT") ? typeof(long) : null,
+            name => Contains(name, "INT") ? _integer : null,
             name => Contains(name, "CHAR")
                     || Contains(name, "CLOB")
-                    || Contains(name, "TEXT") ? typeof(string) : null,
-            name => Contains(name, "BLOB") ? typeof(byte[]) : null,
+                    || Contains(name, "TEXT") ? _text : null,
+            name => Contains(name, "BLOB") ? _blob : null,
             name => Contains(name, "REAL")
                     || Contains(name, "FLOA")
-                    || Contains(name, "DOUB") ? typeof(double) : null
+                    || Contains(name, "DOUB") ? _real : null
         };
 
         private static bool Contains(string haystack, string needle)

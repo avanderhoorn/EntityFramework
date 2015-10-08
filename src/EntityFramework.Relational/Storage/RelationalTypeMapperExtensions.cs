@@ -8,9 +8,9 @@ namespace Microsoft.Data.Entity.Storage
 {
     public static class RelationalTypeMapperExtensions
     {
-        private static readonly RelationalTypeMapping _nullTypeMapping = new RelationalTypeMapping("NULL");
+        private static readonly RelationalTypeMapping _nullTypeMapping = new RelationalTypeMapping("NULL", clrType: null);
 
-        public static RelationalTypeMapping GetMapping(
+        public static RelationalTypeMapping GetMappingForValue(
             [CanBeNull] this IRelationalTypeMapper typeMapper,
             [CanBeNull] object value)
             => value == null

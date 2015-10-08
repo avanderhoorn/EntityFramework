@@ -98,14 +98,13 @@ Statement3
             protected override IReadOnlyDictionary<Type, RelationalTypeMapping> SimpleMappings { get; }
                 = new Dictionary<Type, RelationalTypeMapping>
                     {
-                        { typeof(int), new RelationalTypeMapping("int", DbType.String) }
+                        { typeof(int), new RelationalTypeMapping("int", typeof(int), DbType.String) }
                     };
 
             protected override IReadOnlyDictionary<string, RelationalTypeMapping> SimpleNameMappings { get; }
                 = new Dictionary<string, RelationalTypeMapping>();
 
             protected override string GetColumnType(IProperty property) => property.TestProvider().ColumnType;
-            public override Type FindClrType(string columnTypeName) => null;
         }
     }
 }

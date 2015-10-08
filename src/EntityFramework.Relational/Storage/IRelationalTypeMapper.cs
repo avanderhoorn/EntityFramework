@@ -11,6 +11,6 @@ namespace Microsoft.Data.Entity.Storage
     {
         RelationalTypeMapping GetMapping([NotNull] IProperty property);
         RelationalTypeMapping GetMapping([NotNull] Type clrType);
-        Type FindClrType(string columnTypeName);
+        RelationalTypeMapping GetMapping([NotNull] string typeName);
     }
 }

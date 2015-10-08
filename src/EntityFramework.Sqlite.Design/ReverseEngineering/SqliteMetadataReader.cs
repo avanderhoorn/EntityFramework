@@ -68,7 +68,7 @@ namespace Microsoft.Data.Entity.Sqlite.Design.ReverseEngineering
                         var isPk = reader.GetBoolean((int)TableInfoColumns.Pk);
                         var typeName = reader.GetString((int)TableInfoColumns.Type);
                         var notNull = isPk || reader.GetBoolean((int)TableInfoColumns.NotNull);
-                        var clrType = _typeMapper.FindClrType(typeName);
+                        var clrType = _typeMapper.GetMapping(typeName).ClrType;
 
                         if (!notNull)
                         {
